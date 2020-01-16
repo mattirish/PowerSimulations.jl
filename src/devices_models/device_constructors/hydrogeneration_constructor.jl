@@ -1,3 +1,4 @@
+############### Any Hydro using HydroDispatch with AC ################
 function construct_device!(psi_container::PSIContainer, sys::PSY.System,
                            model::DeviceModel{H, D},
                            ::Type{S};
@@ -25,6 +26,7 @@ function construct_device!(psi_container::PSIContainer, sys::PSY.System,
     return
 end
 
+############### Any Hydro using Hydro SeasonalFlow with AC ################
 function construct_device!(psi_container::PSIContainer, sys::PSY.System,
                            model::DeviceModel{H, HydroDispatchSeasonalFlow},
                            ::Type{S};
@@ -52,7 +54,7 @@ function construct_device!(psi_container::PSIContainer, sys::PSY.System,
     return
 end
 
-
+############### Any Hydro using Hydro UC with AC ################
 function construct_device!(psi_container::PSIContainer, sys::PSY.System,
                            model::DeviceModel{H, D},
                            ::Type{S};
@@ -84,6 +86,7 @@ function construct_device!(psi_container::PSIContainer, sys::PSY.System,
     return
 end
 
+############### Any Hydro using HydroDispatch ################
 function construct_device!(psi_container::PSIContainer, sys::PSY.System,
                            model::DeviceModel{H, D},
                            ::Type{S};
@@ -109,6 +112,7 @@ function construct_device!(psi_container::PSIContainer, sys::PSY.System,
     return
 end
 
+############### Any Hydro using Hydro Seasonal Flow ################
 function construct_device!(psi_container::PSIContainer, sys::PSY.System,
                            model::DeviceModel{H, HydroDispatchSeasonalFlow},
                            ::Type{S};
@@ -134,7 +138,7 @@ function construct_device!(psi_container::PSIContainer, sys::PSY.System,
     return
 end
 
-
+############### Any Hydro using Hydro UC ################
 function construct_device!(psi_container::PSIContainer, sys::PSY.System,
                            model::DeviceModel{H, D},
                            ::Type{S};
@@ -166,7 +170,7 @@ function construct_device!(psi_container::PSIContainer, sys::PSY.System,
     return
 end
 
-
+###############  Any Hydro using HydroFixed ################
 function construct_device!(psi_container::PSIContainer, sys::PSY.System,
                            model::DeviceModel{H, HydroFixed},
                            ::Type{S};
@@ -183,6 +187,7 @@ function construct_device!(psi_container::PSIContainer, sys::PSY.System,
     return
 end
 
+################## HydroFix using AbsHydroFormulation - reverts to HydroFixed ###############
 function construct_device!(psi_container::PSIContainer, sys::PSY.System,
                            model::DeviceModel{PSY.HydroFix, D},
                            ::Type{S};
@@ -197,6 +202,32 @@ function construct_device!(psi_container::PSIContainer, sys::PSY.System,
                       kwargs...)
 end
 
+############### HydroFix using ROR ################
+function construct_device!(psi_container::PSIContainer, sys::PSY.System,
+                           model::DeviceModel{PSY.HydroFix, D},
+                           ::Type{S};
+                           kwargs...) where {D<:AbstractHydroDispatchFormulation,
+                                             S<:PM.AbstractActivePowerModel}
+    devices = PSY.get_components(PSY.HydroFix, sys)
+
+    if validate_available_devices(devices, PSY.HydroFix)
+        return
+    end
+
+    #Variables
+    activepower_variables!(psi_container, devices);
+
+    #Constraints
+    activepower_constraints!(psi_container, devices, model, S, model.feed_forward)
+    feed_forward!(psi_container, PSY.HydroFix, model.feed_forward)
+
+    #Cost Function
+    #cost_function(psi_container, devices, D, S)
+
+    return
+end
+
+########### HydroFix using HydroFixed ###############
 function construct_device!(psi_container::PSIContainer, sys::PSY.System,
                            model::DeviceModel{PSY.HydroFix, HydroFixed},
                            ::Type{S};
